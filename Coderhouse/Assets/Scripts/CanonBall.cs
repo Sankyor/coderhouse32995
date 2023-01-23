@@ -9,6 +9,7 @@ public class CanonBall : MonoBehaviour
     [SerializeField] private Vector3 direction;
     [SerializeField] private float damage;
     [SerializeField] private float lifetime;
+    [SerializeField] private KeyCode space;
     void Start()
     {
         lifetime += Time.time;
@@ -16,6 +17,10 @@ public class CanonBall : MonoBehaviour
     // Update is called once per frame 
     void Update()
     {
+        if (Input.GetKeyDown(space))
+        {
+            transform.localScale *= 2;
+        }
         Move();
         if (lifetime <= Time.time)
         {
