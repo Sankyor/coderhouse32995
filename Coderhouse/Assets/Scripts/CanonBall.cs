@@ -17,10 +17,7 @@ public class CanonBall : MonoBehaviour
     // Update is called once per frame 
     void Update()
     {
-        if (Input.GetKeyDown(space))
-        {
-            transform.localScale *= 2;
-        }
+        
         Move();
         if (lifetime <= Time.time)
         {
