@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SlimeController : MonoBehaviour
 {
-    [SerializeField] private Transform playerTransform;
+    [SerializeField] private Transform slimeTransform;
     [SerializeField] private MovementStates movementStates;
     [SerializeField] private Animator slimeAnimator;
     [SerializeField] private float pursuitDistance;
@@ -13,13 +13,20 @@ public class SlimeController : MonoBehaviour
     private static readonly int Speed = Animator.StringToHash("Speed");
     [SerializeField] private float life;
     [SerializeField] private float lifeMax;
+    [SerializeField] private LayerMask playerLayer;
+    private Transform player;
 
     void Update()
     {
-        LookAtPlayer();
+        //LookAtPlayer();
         SetCurrentState();
 
     }
+    private void Awake()
+    {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+    }
+
     private void SetCurrentState()
     {
         switch (movementStates)
@@ -37,7 +44,7 @@ public class SlimeController : MonoBehaviour
     }
     private void LookAtPlayer()
     {
-        var vectorToLook = playerTransform.position - transform.position;
+        var vectorToLook = player.position - transform.position;
         var newRotation = Quaternion.LookRotation(vectorToLook);
         transform.rotation = newRotation;
         /*Quaternion newRotation = Quaternion.LookRotation(playerTransform.position - transform.position);
@@ -45,7 +52,7 @@ public class SlimeController : MonoBehaviour
     }
     private void MoveTowardsPlayer()
     {
-        var vectorToPlayer = playerTransform.position - transform.position;
+        var vectorToPlayer = player.position - transform.position;
         var distance = vectorToPlayer.magnitude;
 
         if (distance > pursuitMax)
@@ -54,18 +61,32 @@ public class SlimeController : MonoBehaviour
         }
         else if (distance > pursuitDistance)
         {
-            var movement = (playerTransform.position - transform.position).normalized;
-            transform.position += movement * Time.deltaTime;
-            slimeAnimator.SetFloat(Speed, movement.magnitude);
-        }
+            // Raycast to check if the player is visible
+            RaycastHit hit;
+            Vector3 direction = player.position - slimeTransform.position;
+            var l_hasCollided = Physics.SphereCast(slimeTransform.position,life,direction.normalized, out hit, pursuitMax, playerLayer);
+            if (l_hasCollided)
+            {
+                
+                if (hit.collider.CompareTag("Player"))
+                {
+                    // Move towards the player
+                    Debug.DrawRay(transform.position, direction, Color.red);
+                    transform.position = Vector3.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
+                    slimeAnimator.SetFloat(Speed, direction.magnitude);
+                }
+
+            }
+            
+        else movementStates = MovementStates.Idle;
+       }
         else movementStates = MovementStates.Idle;
 
         //transform.position += Vector3.MoveTowards(transform.position,playerTransform.position, Time.deltaTime* speed);
     }
     private void ExecuteIdle()
     {
-        Debug.Log("Idlee state");
-        var vectorToPlayer = playerTransform.position - transform.position;
+        var vectorToPlayer = player.position - transform.position;
         var distance = vectorToPlayer.magnitude;
 
         if (distance > pursuitDistance)
@@ -91,4 +112,5 @@ public class SlimeController : MonoBehaviour
             life = lifeMax;
         }
     }
+  
 }
